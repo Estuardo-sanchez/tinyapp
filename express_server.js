@@ -7,6 +7,17 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
+  let randomString = ' ';
+  let charactersLength = characters.length;
+
+  for (let i = 0; i < 6; i++) {
+    randomString += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return randomString;
+};
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
