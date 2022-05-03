@@ -8,6 +8,9 @@ const res = require("express/lib/response");
 const req = require("express/lib/request");
 app.use(bodyParser.urlencoded({extended: true}));
 
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 app.set("view engine", "ejs");
 
 function generateRandomString(length) {
@@ -62,6 +65,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 });
+
+app.post("/login", (req, res) => {
+  res.cookie("username",req.body.username);
+  res.redirect("/urls")
+})
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
