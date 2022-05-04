@@ -24,18 +24,16 @@ function generateRandomString(length) {
   return randomString;
 };
 
-const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
+const userExists = function(userDatabase, email) {
+  for (const user in users) {
+    if (userDatabase[user].email === email) {
+      return true;
+    }
   }
+  return false;
 }
+
+const users = {};
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -83,12 +81,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username",req.body.username);
+  res.cookie("user_id",req.body.username);
   res.redirect("/urls")
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -122,16 +120,23 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  let userID = generateRandomString();
-  users[userID] = {
-    userID,
-    email: req.body.email,
-    password: req.body.password
+  if (!req.body.email && !req.body.password){
+    res.status(400).send("Enter email and password");
+  } else if (userExists(users, req.body.email)) {
+    res.status(400).send("Email already registered");
+  } else {
+    let userID = generateRandomString();
+    users[userID] = {
+      userID,
+      email: req.body.email,
+      password: req.body.password
+    }
+    res.cookie("user_id", userID);
+    res.redirect("/urls");
   }
-  res.cookie("user_id", userID);
-  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
