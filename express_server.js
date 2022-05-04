@@ -24,6 +24,19 @@ function generateRandomString(length) {
   return randomString;
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -106,6 +119,17 @@ app.get("/register", (req, res) => {
     username: req.cookies["username"]
   }
   res.render("urls_registration", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  let userID = generateRandomString();
+  users[userID] = {
+    userID,
+    email: req.body.email,
+    password: req.body.password
+  }
+  res.cookie("user_id", userID);
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
