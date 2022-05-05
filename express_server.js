@@ -24,13 +24,13 @@ function generateRandomString(length) {
   return randomString;
 };
 
-const userExists = function(userDatabase, email) {
+const checkForUserEmail = function(email, database) {
   for (const user in users) {
-    if (userDatabase[user].email === email) {
-      return true;
+    if (database[user].email === email) {
+      return database[user];
     }
   }
-  return false;
+  return undefined;
 }
 
 const users = {};
@@ -88,8 +88,17 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("user_id",req.body.username);
-  res.redirect("/urls")
+  const user = checkForUserEmail(req.body.email, users);
+  if (user) {
+    if (req.body.password === user.password) {
+      res.cookie("user_id", user.userID);
+      res.redirect("/urls");
+    } else {
+      res.status(403).send("Incorrect password. Please try agin.");
+    }
+  } else {
+    res.status(403).send("This email address is not registered.")
+  }
 });
 
 app.post("/logout", (req, res) => {
@@ -129,7 +138,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   if (!req.body.email && !req.body.password){
     res.status(400).send("Enter email and password");
-  } else if (userExists(users, req.body.email)) {
+  } else if (checkForUserEmail(req.body.email, users)) {
     res.status(400).send("Email already registered");
   } else {
     let userID = generateRandomString();
