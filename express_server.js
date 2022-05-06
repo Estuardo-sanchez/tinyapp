@@ -113,14 +113,18 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies["user_id"]]
+  if (req.cookies["user_id"]) {
+    const templateVars = {
+      user: users[req.cookies["user_id"]]
+    }
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
   }
-  res.render("urls_new", templateVars);
 });
-
+    
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.cookies["user_id"]]
@@ -155,4 +159,5 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
 
