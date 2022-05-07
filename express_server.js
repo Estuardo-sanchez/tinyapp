@@ -6,6 +6,8 @@ const bodyParser = require("body-parser");
 const { redirect } = require("express/lib/response");
 const res = require("express/lib/response");
 const req = require("express/lib/request");
+const bcrypt = require('bcryptjs');
+
 app.use(bodyParser.urlencoded({extended: true}));
 
 const cookieParser = require('cookie-parser');
@@ -107,12 +109,12 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortURL/update", (req, res) => {
   if (!req.cookies["user_id"]) {
-    res.send("no");
+    res.send("URL does not belong to you");
     return;
   }
   const url = urlDatabase[req.params.shortURL];
   if (url.userID !== req.cookies["user_id"]) {
-    res.send("no2");
+    res.send("URL does not belong to you");
     return;
   }
   const shortURL = req.params.shortURL;
@@ -123,12 +125,12 @@ app.post("/urls/:shortURL/update", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (!req.cookies["user_id"]) {
-    res.send("No");
+    res.send("URL does not belong to you");
     return;
   }
   const url = urlDatabase[req.params.shortURL];
   if (url.userID !== req.cookies["user_id"]) {
-    res.send("No2");
+    res.send("URL does not belong to you");
     return;
   }
   delete urlDatabase[req.params.shortURL];
@@ -144,8 +146,9 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const user = checkForUserEmail(req.body.email, users);
+  console.log(user)
   if (user) {
-    if (req.body.password === user.password) {
+    if (bcrypt.compareSync(req.body.password, user.password)) {
       res.cookie("user_id", user.userID);
       res.redirect("/urls");
     } else {
@@ -164,7 +167,7 @@ app.post("/logout", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if(!urlDatabase[shortURL]) {
-    res.send('CHILL')
+    res.send('Cannot do that.')
   }
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
@@ -198,6 +201,7 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
   if (!req.body.email && !req.body.password){
     res.status(400).send("Enter email and password");
   } else if (checkForUserEmail(req.body.email, users)) {
@@ -207,7 +211,7 @@ app.post("/register", (req, res) => {
     users[userID] = {
       userID,
       email: req.body.email,
-      password: req.body.password
+      password: hashedPassword
     }
     res.cookie("user_id", userID);
     res.redirect("/urls");
