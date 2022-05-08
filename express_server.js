@@ -6,12 +6,19 @@ const bodyParser = require("body-parser");
 const { redirect } = require("express/lib/response");
 const res = require("express/lib/response");
 const req = require("express/lib/request");
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
 app.use(bodyParser.urlencoded({extended: true}));
 
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+const cookieSession = require("cookie-session");
+
+app.use(cookieSession({
+  name: "session",
+  keys: ["key1 ,key2"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 app.set("view engine", "ejs");
 
@@ -83,7 +90,8 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userID = req.cookies["user_id"];
+  console.log(users);
+  const userID = req.session.user_id;
   const userUrls = urlsForUser(userID, urlDatabase);
   const templateVars = {
     user: users[userID],
@@ -98,22 +106,22 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body);
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     return res.redirect("/login")
   }
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = {longURL, userID: req.cookies["user_id"]};
+  urlDatabase[shortURL] = {longURL, userID: req.session.user_id};
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/update", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.send("URL does not belong to you");
     return;
   }
   const url = urlDatabase[req.params.shortURL];
-  if (url.userID !== req.cookies["user_id"]) {
+  if (url.userID !== req.session.user_id) {
     res.send("URL does not belong to you");
     return;
   }
@@ -124,12 +132,12 @@ app.post("/urls/:shortURL/update", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.send("URL does not belong to you");
     return;
   }
   const url = urlDatabase[req.params.shortURL];
-  if (url.userID !== req.cookies["user_id"]) {
+  if (url.userID !== req.session.user_id) {
     res.send("URL does not belong to you");
     return;
   }
@@ -139,17 +147,16 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   }
   res.render("urls_login", templateVars);
 });
 
 app.post("/login", (req, res) => {
   const user = checkForUserEmail(req.body.email, users);
-  console.log(user)
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
-      res.cookie("user_id", user.userID);
+      req.session.user_id = user.userID;
       res.redirect("/urls");
     } else {
       res.status(403).send("Incorrect password. Please try agin.");
@@ -160,7 +167,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -174,9 +181,9 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     const templateVars = {
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.user_id]
     }
     res.render("urls_new", templateVars);
   } else {
@@ -188,14 +195,14 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
    };
   res.render("urls_show", templateVars);
 });
 
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   }
   res.render("urls_registration", templateVars);
 });
@@ -213,7 +220,7 @@ app.post("/register", (req, res) => {
       email: req.body.email,
       password: hashedPassword
     }
-    res.cookie("user_id", userID);
+    req.session.user_id = userID;
     res.redirect("/urls");
   }
 });
