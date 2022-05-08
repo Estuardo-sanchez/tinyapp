@@ -5,11 +5,11 @@ const checkForUserEmail = function(email, database) {
     }
   }
   return undefined;
-}
+};
 
 const urlsForUser = (id, database) => {
   let usersUrl = {};
-
+  console.log(id, database, 'id databse');
   for (const shortURL in database) {
     if (database[shortURL].userID === id) {
       usersUrl[shortURL] = database[shortURL];
@@ -18,7 +18,7 @@ const urlsForUser = (id, database) => {
   return usersUrl;
 };
 
-function generateRandomString(length) {
+const generateRandomString = function() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
   let randomString = ' ';
   let charactersLength = characters.length;
