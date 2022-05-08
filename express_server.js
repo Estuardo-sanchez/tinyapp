@@ -18,7 +18,7 @@ app.use(cookieSession({
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 //USERS DATABASE
 const users = {};
@@ -46,9 +46,7 @@ app.get("/urls", (req, res) => {
   const templateVars = {
     user: users[userID],
     urls: userUrls
-  }
-  console.log(users, 'users')
-  console.log(templateVars, 'urls')
+  };
   if (!userID) {
     res.send("Login to access URLS");
     return;
@@ -60,7 +58,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body);
   if (!req.session.user_id) {
-    return res.redirect("/login")
+    return res.redirect("/login");
   }
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
@@ -81,8 +79,8 @@ app.post("/urls/:shortURL/update", (req, res) => {
   }
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-  const userID = req.session.user_id
-  urlDatabase[shortURL] = { longURL, userID }
+  const userID = req.session.user_id;
+  urlDatabase[shortURL] = { longURL, userID };
   res.redirect('/urls');
 });
 
@@ -105,7 +103,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = {
     user: users[req.session.user_id]
-  }
+  };
   res.render("urls_login", templateVars);
 });
 
@@ -120,7 +118,7 @@ app.post("/login", (req, res) => {
       res.status(403).send("Incorrect password. Please try agin.");
     }
   } else {
-    res.status(403).send("This email address is not registered.")
+    res.status(403).send("This email address is not registered.");
   }
 });
 
@@ -134,7 +132,7 @@ app.post("/logout", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
-    res.send('Cannot do that.')
+    res.send('Cannot do that.');
   }
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
@@ -145,7 +143,7 @@ app.get("/urls/new", (req, res) => {
   if (req.session.user_id) {
     const templateVars = {
       user: users[req.session.user_id]
-    }
+    };
     res.render("urls_new", templateVars);
   } else {
     res.redirect("/login");
@@ -166,7 +164,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = {
     user: users[req.session.user_id]
-  }
+  };
   res.render("urls_registration", templateVars);
 });
 
@@ -183,7 +181,7 @@ app.post("/register", (req, res) => {
       userID,
       email: req.body.email,
       password: hashedPassword
-    }
+    };
     req.session.user_id = userID;
     res.redirect("/urls");
   }
