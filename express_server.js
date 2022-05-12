@@ -41,16 +41,15 @@ app.get("/hello", (req, res) => {
 
 // SHOW ALL URLS
 app.get("/urls", (req, res) => {
+  if (!req.session.user_id) {
+    return res.send("Login to access URLS");
+  }
   const userID = req.session.user_id;
   const userUrls = urlsForUser(userID, urlDatabase);
   const templateVars = {
     user: users[userID],
     urls: userUrls
   };
-  if (!userID) {
-    res.send("Login to access URLS");
-    return;
-  }
   res.render("urls_index", templateVars);
 });
 
@@ -68,18 +67,18 @@ app.post("/urls", (req, res) => {
 
 // ROUTE TO UPDATE LONG URL'S SHORT URL
 app.post("/urls/:shortURL/update", (req, res) => {
-  if (!req.session.user_id) {
-    res.send("URL does not belong to you");
+  const userID = req.session.user_id;
+  if (!userID) {
+    res.send("Please login");
     return;
   }
   const url = urlDatabase[req.params.shortURL];
-  if (url.userID !== req.session.user_id) {
+  if (url.userID !== userID) {
     res.send("URL does not belong to you");
     return;
   }
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-  const userID = req.session.user_id;
   urlDatabase[shortURL] = { longURL, userID };
   res.redirect('/urls');
 });
@@ -152,6 +151,15 @@ app.get("/urls/new", (req, res) => {
 
 // ROUTE FOR A SHORT URL
 app.get("/urls/:shortURL", (req, res) => {
+  if (!req.session.user_id) {
+    res.send("Please log in to view URL");
+  }
+  const url = urlDatabase[req.params.shortURL]
+  console.log(url, req.session.user_id)
+  if (url.userID !== req.session.user_id) {
+    res.send("URL does not belong to you");
+    return;
+  }
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
