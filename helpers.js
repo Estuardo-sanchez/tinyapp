@@ -20,7 +20,7 @@ const urlsForUser = (id, database) => {
 
 const generateRandomString = function() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
-  let randomString = ' ';
+  let randomString = '';
   let charactersLength = characters.length;
 
   for (let i = 0; i < 6; i++) {
